@@ -70,7 +70,7 @@ var exporterVersion = ""
 
 func main() {
 	flag.BoolVar(&options.Debug, "debug", false, "enable debugging")
-	flag.DurationVar(&options.Interval, "interval", time.Second*60, "interval of sending metrics to server")
+	flag.DurationVar(&options.Interval, "interval", time.Second*62, "interval of sending metrics to server")
 	flag.StringVar(&options.ServerAddress, "server.address", "https://beaconcha.in/api/v1/client/metrics", "address of server to push metrics to")
 	flag.DurationVar(&options.ServerTimeout, "server.timeout", time.Second*10, "timeout for sending data to the server")
 	flag.StringVar(&options.Partition, "system.partition", "/", "mountpoint of partition which will be tracked for usage, if empty-string the highest usage of any partition will be recorded")
@@ -123,6 +123,19 @@ func main() {
 		Timeout: options.ServerTimeout,
 	}
 
+	logrus.WithFields(logrus.Fields{
+		// "ServerAddress": options.ServerAddress, // may contain secrets, dont log
+		"ServerTimeout":     options.ServerTimeout,
+		"BeaconnodeType":    options.BeaconnodeType,
+		"BeaconnodeAddress": options.BeaconnodeAddress,
+		"ValidatorType":     options.ValidatorType,
+		"ValidatorAddress":  options.ValidatorAddress,
+		"Interval":          options.Interval,
+		"Partition":         options.Partition,
+		"Debug":             options.Debug,
+		"Version":           exporterVersion,
+	}).Infof("starting exporter")
+
 	collectDataLoop()
 }
 
@@ -135,6 +148,7 @@ func collectDataLoop() {
 		if err != nil {
 			logrus.WithError(err).Error("failed collecting data")
 			time.Sleep(time.Second * 10)
+			t.Reset(options.Interval)
 			continue
 		}
 		logrus.WithFields(logrus.Fields{"duration": time.Since(t0)}).Info("collected data")
@@ -144,6 +158,7 @@ func collectDataLoop() {
 		if err != nil {
 			logrus.WithError(err).Error("failed sending data")
 			time.Sleep(time.Second * 10)
+			t.Reset(options.Interval)
 			continue
 		}
 		logrus.WithFields(logrus.Fields{"duration": time.Since(t1)}).Info("sent data")
