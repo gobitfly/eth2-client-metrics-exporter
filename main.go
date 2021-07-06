@@ -282,10 +282,11 @@ func getSystemData(ts uint64) (*SystemData, error) {
 		return nil, fmt.Errorf("failed getting cpu times: %w", err)
 	}
 	for _, t := range cpuTimes {
-		systemData.CPUNodeSystemSecondsTotal += uint64(t.System)
+		systemData.CPUNodeIdleSecondsTotal += uint64(t.Idle)
 		systemData.CPUNodeUserSecondsTotal += uint64(t.User)
 		systemData.CPUNodeIOWaitSecondsTotal += uint64(t.Iowait)
-		systemData.CPUNodeIdleSecondsTotal += uint64(t.Idle)
+		// note: currently beaconcha.in expects this to be everything but idle
+		systemData.CPUNodeSystemSecondsTotal += uint64(t.System) + uint64(t.Iowait) + uint64(t.User)
 	}
 
 	memStat, err := mem.VirtualMemory()
