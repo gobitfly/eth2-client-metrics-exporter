@@ -83,6 +83,7 @@ func main() {
 
 	if *versionFlag {
 		fmt.Printf("%v\n", Version)
+		return
 	}
 
 	if options.Debug {
@@ -285,8 +286,8 @@ func getSystemData(ts uint64) (*SystemData, error) {
 		systemData.CPUNodeIdleSecondsTotal += uint64(t.Idle)
 		systemData.CPUNodeUserSecondsTotal += uint64(t.User)
 		systemData.CPUNodeIOWaitSecondsTotal += uint64(t.Iowait)
-		// note: currently beaconcha.in expects this to be everything but idle
-		systemData.CPUNodeSystemSecondsTotal += uint64(t.System) + uint64(t.Iowait) + uint64(t.User)
+		// note: currently beaconcha.in expects this to be everything
+		systemData.CPUNodeSystemSecondsTotal += uint64(t.System) + uint64(t.Iowait) + uint64(t.User) + uint64(t.Idle)
 	}
 
 	memStat, err := mem.VirtualMemory()
