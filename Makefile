@@ -13,10 +13,10 @@ test:
 	go test -v ./...
 clean:
 	rm -rf bin
-build:
-	go build --ldflags=${LDFLAGS} -o ${BINARY}
-build-docker:
-	docker build -t ${DOCKERIMAGE} -t ${DOCKERIMAGE}:${GITDATESHORT}-${GITCOMMIT} .
-push-docker:
-	docker push ${DOCKERIMAGE}
-	docker push ${DOCKERIMAGE}:${GITDATESHORT}-${GITCOMMIT}
+build: build-binary-linux-amd64 build-binary-linux-arm64
+	echo ${GITDATE}
+	echo ${GITDATESHORT}
+build-binary-linux-amd64:
+	env GOOS=linux GOARCH=amd64 go build --ldflags=${LDFLAGS} -o ${BINARY}-linux-amd64
+build-binary-linux-arm64:
+	env GOOS=linux GOARCH=arm64 go build --ldflags=${LDFLAGS} -o ${BINARY}-linux-arm64
