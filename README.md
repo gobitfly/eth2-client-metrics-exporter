@@ -7,7 +7,8 @@ a sidecar for exporting [eth2-client-metrics](https://github.com/gobitfly/eth2-c
 first start `beaconnode` and `validator` (with metrics-endpoints enabled), then start the `eth2-client-metrics-exporter` and point it to your beaconnode and validator:
 
 ```bash
-./eth2-client-metrics-exporter \
+make
+./bin/eth2-client-metrics-exporter-linux-amd64 \
     --server.address=https://prater.beaconcha.in/api/v1/client/metrics?apikey=<beaconcha.in-apikey>&machine=<machine-name> \
     --beaconnode.type=prysm \
     --beaconnode.address=http://localhost:9090 \
