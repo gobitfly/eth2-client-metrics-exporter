@@ -47,8 +47,9 @@ var options = struct {
 type ClientType string
 
 const (
-	PrysmBeaconnodeMetricsClientType ClientType = "prysm-beaconnode-metrics"
-	PrysmValidatorMetricsClientType  ClientType = "prysm-validator-metrics"
+	PrysmBeaconnodeMetricsClientType  ClientType = "prysm-beaconnode-metrics"
+	PrysmValidatorMetricsClientType   ClientType = "prysm-validator-metrics"
+	NimbusBeaconnodeMetricsClientType ClientType = "nimbus-beaconnode-metrics"
 )
 
 type ClientEndpoint struct {
@@ -71,7 +72,7 @@ var exporterVersion = ""
 func main() {
 	flag.BoolVar(&options.Debug, "debug", false, "enable debugging")
 	flag.DurationVar(&options.Interval, "interval", time.Second*62, "interval of sending metrics to server")
-	flag.StringVar(&options.ServerAddress, "server.address", "https://beaconcha.in/api/v1/client/metrics", "address of server to push metrics to")
+	flag.StringVar(&options.ServerAddress, "server.address", "", "address of server to push metrics to")
 	flag.DurationVar(&options.ServerTimeout, "server.timeout", time.Second*10, "timeout for sending data to the server")
 	flag.StringVar(&options.Partition, "system.partition", "/", "mountpoint of partition which will be tracked for usage, if empty-string the highest usage of any partition will be recorded")
 	flag.StringVar(&options.BeaconnodeType, "beaconnode.type", "prysm", "endpoint to scrape metrics from")
@@ -90,11 +91,17 @@ func main() {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
+	if options.ServerAddress == "" {
+		logrus.Fatal("Server address not provided.")
+	}
+
 	if options.BeaconnodeAddress != "" {
 		var clientType ClientType
 		switch options.BeaconnodeType {
 		case "prysm":
 			clientType = PrysmBeaconnodeMetricsClientType
+		case "nimbus":
+			clientType = NimbusBeaconnodeMetricsClientType
 		default:
 			logrus.Fatal("invalid beaconnode.type")
 		}
@@ -118,6 +125,10 @@ func main() {
 		})
 	}
 
+	if options.BeaconnodeAddress == "" && options.ValidatorAddress == "" {
+		logrus.Fatal("Neither beacon node nor validator address provided.")
+	}
+
 	exporterVersion = fmt.Sprintf("beaconcha.in@%v", GitCommit)
 
 	httpClient = &http.Client{
@@ -125,7 +136,7 @@ func main() {
 	}
 
 	logrus.WithFields(logrus.Fields{
-		// "ServerAddress": options.ServerAddress, // may contain secrets, dont log
+		// "ServerAddress": options.ServerAddress, // may contain secrets, don't log
 		"ServerTimeout":     options.ServerTimeout,
 		"BeaconnodeType":    options.BeaconnodeType,
 		"BeaconnodeAddress": options.BeaconnodeAddress,
@@ -206,8 +217,15 @@ func collectData() ([]interface{}, error) {
 					return
 				}
 				results <- d
+			case NimbusBeaconnodeMetricsClientType:
+				d, err := getNimbusBeaconnodeData(c.Address, ts)
+				if err != nil {
+					logrus.WithFields(logrus.Fields{"error": err, "address": c.Address, "type": c.Type}).Errorf("failed getting data")
+					return
+				}
+				results <- d
 			default:
-				logrus.Errorf("unknown client-endpoint-type: %v", c.Type)
+				logrus.Fatalf("unknown client-endpoint-type: %v", c.Type)
 			}
 			return
 		}(c)
@@ -228,7 +246,7 @@ func collectData() ([]interface{}, error) {
 func sendData(data []interface{}) error {
 	dataJSON, err := json.Marshal(data)
 	if err != nil {
-		err = fmt.Errorf("failed marahsling data: %w", err)
+		err = fmt.Errorf("failed marshaling data: %w", err)
 		return err
 	}
 
@@ -533,6 +551,83 @@ func getPrysmValidatorData(endpoint string, ts uint64) (*ValidatorData, error) {
 			}
 		}
 	}
+
+	return data, nil
+}
+
+func getNimbusBeaconnodeData(endpoint string, ts uint64) (*BeaconnodeData, error) {
+	metrics, err := getMetrics(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	data := &BeaconnodeData{}
+
+	// CommonData
+	data.Version = specVersion
+	data.Timestamp = ts
+	data.ExporterVersion = exporterVersion
+	data.Process = "beaconnode"
+
+	// ProcessData
+	data.CPUProcessSecondsTotal = uint64(getMetricValueFromFamilyMap(metrics, "process_cpu_seconds_total"))
+	data.MemoryProcessBytes = uint64(getMetricValueFromFamilyMap(metrics, "process_resident_memory_bytes"))
+	data.ClientName = "nimbus"
+
+	versionMetric, exists := metrics["version"]
+	if exists {
+		ms := versionMetric.GetMetric()
+		if len(ms) > 0 {
+			ls := ms[0].GetLabel()
+			for _, l := range ls {
+				if l.Name != nil && l.Value != nil && *l.Name == "version" {
+					data.ClientVersion = *l.Value
+					break
+				}
+			}
+		}
+	}
+
+	// data.ClientBuild = 0
+	// data.SyncEth2FallbackConfigured = false
+	// data.SyncEth2FallbackConnected = false
+
+	// // BeaconnodeData
+	// data.DiskBeaconchainBytesTotal = uint64(getMetricValueFromFamilyMap(metrics, "bcnode_disk_beaconchain_bytes_total"))
+
+	// p2pMessageReceivedTotalMetric, exists := metrics["p2p_message_received_total"]
+	// if exists {
+	// ms := p2pMessageReceivedTotalMetric.GetMetric()
+	// total := uint64(0)
+	// for _, m := range ms {
+	// total += uint64(getMetricValue(m))
+	// }
+	// data.NetworkLibP2PBytesTotalReceive = total
+	// }
+
+	// data.NetworkLibP2PBytesTotalTransmit = 0
+
+	// p2pPeerCount, exists := metrics["p2p_peer_count"]
+	// if exists {
+	// ms := p2pPeerCount.GetMetric()
+	// for _, m := range ms {
+	// ls := m.GetLabel()
+	// for _, l := range ls {
+	// if l.Name != nil && l.Value != nil && *l.Name == "State" && *l.Value == "Connected" {
+	// data.ClientVersion = *l.Value
+	// data.NetworkPeersConnected = uint64(getMetricValue(m))
+	// break
+	// }
+	// }
+	// }
+	// }
+
+	// data.SyncEth1Connected = false
+	// data.SyncEth2Synced = false
+	data.SyncBeaconHeadSlot = uint64(getMetricValueFromFamilyMap(metrics, "beacon_head_slot"))
+	// data.SyncEth1FallbackConfigured = false
+	// data.SyncEth1FallbackConnected = false
+	// data.SlasherActive = false
 
 	return data, nil
 }
