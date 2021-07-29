@@ -11,9 +11,9 @@ make
 ./bin/eth2-client-metrics-exporter-linux-amd64 \
     --server.address='https://prater.beaconcha.in/api/v1/client/metrics?apikey=<beaconcha.in-apikey>&machine=<machine-name>' \
     --beaconnode.type=prysm \
-    --beaconnode.address=http://localhost:9090 \
+    --beaconnode.address=http://localhost:8080/metrics \
     --validator.type=prysm \
-    --validator.address=http://localhost:9091
+    --validator.address=http://localhost:8081/metrics
 ```
 
 ## client support status
