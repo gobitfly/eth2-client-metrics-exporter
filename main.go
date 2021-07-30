@@ -76,9 +76,9 @@ func main() {
 	flag.DurationVar(&options.ServerTimeout, "server.timeout", time.Second*10, "timeout for sending data to the server")
 	flag.StringVar(&options.Partition, "system.partition", "/", "mountpoint of partition which will be tracked for usage, if empty-string the highest usage of any partition will be recorded")
 	flag.StringVar(&options.BeaconnodeType, "beaconnode.type", "prysm", "endpoint to scrape metrics from")
-	flag.StringVar(&options.BeaconnodeAddress, "beaconnode.address", "", "address of beaconnode-endpoint to scrape metrics from (eg: http://localhost:9090/metrics), disabled if empty string")
+	flag.StringVar(&options.BeaconnodeAddress, "beaconnode.address", "", "address of beaconnode-endpoint to scrape metrics from (eg: http://localhost:8080/metrics), disabled if empty string")
 	flag.StringVar(&options.ValidatorType, "validator.type", "prysm", "endpoint to scrape metrics from")
-	flag.StringVar(&options.ValidatorAddress, "validator.address", "", "address of validator-endpoint to scrape metrics from (eg: http://localhost:9090/metrics), disabled if emtpy string")
+	flag.StringVar(&options.ValidatorAddress, "validator.address", "", "address of validator-endpoint to scrape metrics from (eg: http://localhost:8081/metrics), disabled if emtpy string")
 	versionFlag := flag.Bool("version", false, "show version and exit")
 	flag.Parse()
 
@@ -135,6 +135,17 @@ func main() {
 		Timeout: options.ServerTimeout,
 	}
 
+	beaconchain := `                                                                                                                                                                                                                                                                     
+	 _                                     _             _       
+	| |                                   | |           (_)      
+	| |__   ___  __ _  ___ ___  _ __   ___| |__   __ _   _ _ __  
+	| '_ \ / _ \/ _' |/ __/ _ \| '_ \ / __| '_ \ / _' | | | '_ \ 
+	| |_) |  __/ (_| | (_| (_) | | | | (__| | | | (_| |_| | | | |
+	|_.__/ \___|\__,_|\___\___/|_| |_|\___|_| |_|\__,_(_)_|_| |_|
+								 																																																																																																																																																																																																																																																						 
+	`
+
+	fmt.Println(beaconchain)
 	logrus.WithFields(logrus.Fields{
 		// "ServerAddress": options.ServerAddress, // may contain secrets, don't log
 		"ServerTimeout":     options.ServerTimeout,
@@ -492,8 +503,8 @@ func getPrysmBeaconnodeData(endpoint string, ts uint64) (*BeaconnodeData, error)
 		}
 	}
 
-	data.SyncEth1Connected = false
-	data.SyncEth2Synced = false
+	data.SyncEth1Connected = true // todo
+	data.SyncEth2Synced = true    // todo
 	data.SyncBeaconHeadSlot = uint64(getMetricValueFromFamilyMap(metrics, "beacon_head_slot"))
 	data.SyncEth1FallbackConfigured = false
 	data.SyncEth1FallbackConnected = false
@@ -622,8 +633,9 @@ func getNimbusBeaconnodeData(endpoint string, ts uint64) (*BeaconnodeData, error
 	// }
 	// }
 
-	// data.SyncEth1Connected = false
-	// data.SyncEth2Synced = false
+	data.SyncEth1Connected = true // todo
+	data.SyncEth2Synced = true    // todo
+
 	data.SyncBeaconHeadSlot = uint64(getMetricValueFromFamilyMap(metrics, "beacon_head_slot"))
 	// data.SyncEth1FallbackConfigured = false
 	// data.SyncEth1FallbackConnected = false
