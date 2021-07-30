@@ -6,7 +6,7 @@ A sidecar for exporting [eth2-client-metrics](https://github.com/gobitfly/eth2-c
 
 1. Get your server.address by signing in to https://beaconcha.in/user/settings#app and copy the URL.
 
-2. Download this tool from our releases page or compile from source (see below). For Raspberry PI's or other ARM based CPU's, use eth2-client-metrics-exporter-linux-arm64. Otherwise eth2-client-metrics-exporter-linux-amd64.
+2. Download this tool from our releases page or compile from source (see below). For Raspberry PI's or other ARM based CPU's, use `eth2-client-metrics-exporter-linux-arm64`. Otherwise `eth2-client-metrics-exporter-linux-amd64`.
 
 2. Start `beaconnode` and `validator` (with metrics-endpoints enabled), then start the `eth2-client-metrics-exporter` and point it to your beaconnode and validator:
 
