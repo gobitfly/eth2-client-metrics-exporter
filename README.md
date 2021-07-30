@@ -6,6 +6,8 @@ A sidecar for exporting [eth2-client-metrics](https://github.com/gobitfly/eth2-c
 
 1. Get your server.address by signing in to https://beaconcha.in/user/settings#app and copy the URL.
 
+2. Download this tool from our releases page or compile from source (see below).
+
 2. Start `beaconnode` and `validator` (with metrics-endpoints enabled), then start the `eth2-client-metrics-exporter` and point it to your beaconnode and validator:
 
 ### Prysm
@@ -15,7 +17,7 @@ Replace the server.address URL with the one retrieved from Step 1.
 #### Node & Validator
 
 ```bash
-./bin/eth2-client-metrics-exporter-linux-amd64 \
+./eth2-client-metrics-exporter-linux-amd64 \
     --server.address='https://beaconcha.in/api/v1/client/metrics?apikey=<beaconcha.in-apikey>&machine=<machine-name>' \
     --beaconnode.type=prysm \
     --beaconnode.address=http://localhost:8080/metrics \
@@ -36,7 +38,7 @@ If you want to monitor only the node or only the validator, ommit either the bea
 Replace the server.address URL with the one retrieved from Step 1. Then run the metrics exporter with:
 
 ```bash
-./bin/eth2-client-metrics-exporter-linux-amd64 \
+./eth2-client-metrics-exporter-linux-amd64 \
     --server.address='https://beaconcha.in/api/v1/client/metrics?apikey=<beaconcha.in-apikey>&machine=<machine-name>' \
     --beaconnode.type=nimbus \
     --beaconnode.address=http://localhost:8008/metrics \
