@@ -1,9 +1,18 @@
-FROM golang:1.16 as builder
-ADD . /app
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.16-alpine AS build
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+ARG VERSION
+RUN echo "running on $BUILDPLATFORM, building for $TARGETPLATFORM"
+RUN apk add --no-cache git make bash build-base
 WORKDIR /app
-RUN make
+COPY . .
+RUN make test && make build-binary
 
-FROM ubuntu:18.04
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /app/bin/eth2-client-metrics-exporter-linux-amd64 /usr/local/bin/eth2-client-metrics-exporter
-ENTRYPOINT ["/usr/local/bin/eth2-client-metrics-exporter"]
+FROM --platform=${TARGETPLATFORM:-linux/amd64} alpine:latest as prod
+RUN addgroup -S app \
+    && adduser -S -G app app \
+    && apk --no-cache add \
+    ca-certificates
+USER app
+COPY --from=build  /app/bin/eth2-client-metrics-exporter /bin/eth2-client-metrics-exporter
+ENTRYPOINT ["/bin/eth2-client-metrics-exporter"]

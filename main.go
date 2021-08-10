@@ -24,12 +24,9 @@ import (
 
 // Build information. Populated at build-time
 var (
-	Version      = "undefined"
-	GitDate      = "undefined"
-	GitDateShort = "undefined"
-	GitCommit    = "undefined"
-	BuildDate    = "undefined"
-	GoVersion    = runtime.Version()
+	GitDate   = "undefined"
+	GitCommit = "undefined"
+	GoVersion = runtime.Version()
 )
 
 var options = struct {
@@ -83,7 +80,7 @@ func main() {
 	flag.Parse()
 
 	if *versionFlag {
-		fmt.Printf("%v\n", Version)
+		fmt.Printf("git-commit: %v\ngit-date: %v\ngo-version: %v\n", GitCommit, GitDate, GoVersion)
 		return
 	}
 
