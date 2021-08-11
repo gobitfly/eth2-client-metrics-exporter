@@ -4,38 +4,19 @@ A sidecar for exporting [eth2-client-metrics](https://github.com/gobitfly/eth2-c
 
 ## How to use
 
-1. Get your server.address by signing in to https://beaconcha.in/user/settings#app and copy the URL.
+1. Start `beaconnode` and/or `validator` with metrics-endpoints enabled.
 
-2. Download this tool from our releases page or compile from source (see below). For Raspberry PI's or other ARM based CPU's, use `eth2-client-metrics-exporter-linux-arm64`. Otherwise `eth2-client-metrics-exporter-linux-amd64`.
+2. Get your `server.address` by signing in to https://beaconcha.in/user/settings#app and copy the URL.
 
-2. Start `beaconnode` and `validator` (with metrics-endpoints enabled), then start the `eth2-client-metrics-exporter` and point it to your beaconnode and validator:
+3. Start the eth2-client-metrics-exporter and point it to your `beaconnode` and/or `validator`.
 
-### Prysm
+*For a more comprehensive guide please take a look at the [beaconchain-knowledge-base](https://kb.beaconcha.in/beaconcha.in-explorer/mobile-app-less-than-greater-than-beacon-node).*
 
-Replace the server.address URL with the one retrieved from Step 1.
+### Example with binary
 
-#### Node & Validator
+Make sure to run your beaconnode and/or validator with metrics enabled (in case of Nimbus for example use these flags `--metrics --metric-port=8008`).
 
-```bash
-./eth2-client-metrics-exporter-linux-amd64 \
-    --server.address='https://beaconcha.in/api/v1/client/metrics?apikey=<beaconcha.in-apikey>&machine=<machine-name>' \
-    --beaconnode.type=prysm \
-    --beaconnode.address=http://localhost:8080/metrics \
-    --validator.type=prysm \
-    --validator.address=http://localhost:8081/metrics
-```
-
-If you want to monitor only the node or only the validator, ommit either the beaconnode or validator flags.  
-  
-
-### Nimbus
-
-- Make sure you started your Nimbus node with
-```
---metrics --metric-port=8008
-```
-
-Replace the server.address URL with the one retrieved from Step 1. Then run the metrics exporter with:
+Then point the exporter at this metrics-endpoint:
 
 ```bash
 ./eth2-client-metrics-exporter-linux-amd64 \
@@ -43,10 +24,60 @@ Replace the server.address URL with the one retrieved from Step 1. Then run the 
     --beaconnode.type=nimbus \
     --beaconnode.address=http://localhost:8008/metrics \
 ```
-  
-  
+
+### Example with docker
+
+```yaml
+version: "3.7"
+services:
+  # run prysm-node with metrics enabled
+  prysm-node:
+    image: gcr.io/prysmaticlabs/prysm/beacon-chain
+    command:
+      - --accept-terms-of-use
+      - --datadir=/data
+      - --monitoring-port=9090
+      - --monitoring-host=0.0.0.0
+    volumes:
+      - ./docker-volumes/prysm-node:/data
+    restart: always
+
+  # run prysm-validator with metrics enabled
+  prysm-validator:
+    image: gcr.io/prysmaticlabs/prysm/validator
+    restart: unless-stopped
+    command:
+      - --accept-terms-of-use
+      - --beacon-rpc-provider=prysm-node:4000
+      - --wallet-password-file=/v/wallet-password.txt
+      - --monitoring-port=9090
+      - --monitoring-host=0.0.0.0
+    volumes:
+      - ./docker-volumes/prysm-validator:/home/.eth2
+      - ./wallet-password.txt:/v/wallet-password.txt
+
+  # point exporter to metrics of beaconnode and/or validator
+  eth2-client-metrics-exporter:
+    image: gobitfly/eth2-client-metrics-exporter
+    restart: unless-stopped
+    command:
+      - --server.address=https://beaconcha.in/api/v1/client/metrics?apikey=<apikey>&machine=<machine>
+      - --system.partition=/host/rootfs
+      - --beaconnode.type=prysm
+      - --beaconnode.address=http://prysm-node:9090/metrics
+      - --validator.type=prysm
+      - --validator.address=http://prysm-validator:9090/metrics
+    volumes:
+      - /sys:/host/sys:ro
+      - /proc:/host/proc:ro
+      - /:/host/rootfs:ro
+    environment:
+      - HOST_PROC=/host/proc
+      - HOST_SYS=/host/sys
+```
 
 ## Build
+
 - Requirement: Go 1.16
 
 ```bash
