@@ -91,7 +91,8 @@ make
 * Lighthouse
   * Lighthouse has its own metrics-exporter built in and it works out of the box, no need for this extra program right now
 * Nimbus
-  * partial support
+  * beaconnode is partially implemented
+  * validator is not implemented
 * Prysm
   * missing
     * beaconnode
