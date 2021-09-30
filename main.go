@@ -110,11 +110,11 @@ func main() {
 
 	if options.ValidatorAddress != "" {
 		var clientType ClientType
-		switch options.BeaconnodeType {
+		switch options.ValidatorType {
 		case "prysm":
 			clientType = PrysmValidatorMetricsClientType
 		default:
-			logrus.Fatal("invalid beaconnode.type")
+			logrus.Fatal("invalid validator.type")
 		}
 		clientEndpoints = append(clientEndpoints, ClientEndpoint{
 			Type:    clientType,
