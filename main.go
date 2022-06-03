@@ -596,47 +596,15 @@ func getNimbusBeaconnodeData(endpoint string, ts uint64) (*BeaconnodeData, error
 		}
 	}
 
-	// data.ClientBuild = 0
-	// data.SyncEth2FallbackConfigured = false
-	// data.SyncEth2FallbackConnected = false
-
-	// // BeaconnodeData
-	// data.DiskBeaconchainBytesTotal = uint64(getMetricValueFromFamilyMap(metrics, "bcnode_disk_beaconchain_bytes_total"))
-
-	// p2pMessageReceivedTotalMetric, exists := metrics["p2p_message_received_total"]
-	// if exists {
-	// ms := p2pMessageReceivedTotalMetric.GetMetric()
-	// total := uint64(0)
-	// for _, m := range ms {
-	// total += uint64(getMetricValue(m))
-	// }
-	// data.NetworkLibP2PBytesTotalReceive = total
-	// }
-
-	// data.NetworkLibP2PBytesTotalTransmit = 0
-
-	// p2pPeerCount, exists := metrics["p2p_peer_count"]
-	// if exists {
-	// ms := p2pPeerCount.GetMetric()
-	// for _, m := range ms {
-	// ls := m.GetLabel()
-	// for _, l := range ls {
-	// if l.Name != nil && l.Value != nil && *l.Name == "State" && *l.Value == "Connected" {
-	// data.ClientVersion = *l.Value
-	// data.NetworkPeersConnected = uint64(getMetricValue(m))
-	// break
-	// }
-	// }
-	// }
-	// }
+	// BeaconnodeData
+	data.ClientBuild = 0
+	data.SyncEth2FallbackConfigured = false
+	data.SyncEth2FallbackConnected = false
+	data.NetworkPeersConnected = uint64(getMetricValueFromFamilyMap(metrics, "nbc_peers"))
+	data.SyncBeaconHeadSlot = uint64(getMetricValueFromFamilyMap(metrics, "beacon_head_slot"))
 
 	data.SyncEth1Connected = true // todo
 	data.SyncEth2Synced = true    // todo
-
-	data.SyncBeaconHeadSlot = uint64(getMetricValueFromFamilyMap(metrics, "beacon_head_slot"))
-	// data.SyncEth1FallbackConfigured = false
-	// data.SyncEth1FallbackConnected = false
-	// data.SlasherActive = false
 
 	return data, nil
 }
