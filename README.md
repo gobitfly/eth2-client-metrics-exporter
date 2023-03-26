@@ -90,6 +90,8 @@ make
 
 * Lighthouse
   * Lighthouse has its own metrics-exporter built in and it works out of the box, no need for this extra program right now
+* Lodestar
+  * has its own metrics-exporter built-in which can be enabled by passing the `--monitoring.endpoint` CLI flag, see [client monitoring](https://chainsafe.github.io/lodestar/usage/client-monitoring/) for details.
 * Nimbus
   * beaconnode is partially implemented
   * validator is not implemented
