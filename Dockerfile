@@ -6,7 +6,7 @@ RUN echo "running on $BUILDPLATFORM, building for $TARGETPLATFORM"
 RUN apk add --no-cache git make bash build-base
 WORKDIR /app
 COPY . .
-RUN make test && make build-ci
+RUN make test && make build
 
 FROM --platform=${TARGETPLATFORM:-linux/amd64} alpine:latest as prod
 RUN addgroup -S app \
