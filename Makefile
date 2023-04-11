@@ -7,11 +7,8 @@ test:
 	go test -v ./...
 clean:
 	rm -rf bin
-build: build-binary-linux-amd64 build-binary-linux-arm64
-	echo ${GITDATE}
-	echo ${GITDATESHORT}
-build-binary:
-	go build --ldflags=${LDFLAGS} -o ${BINARY}
+build:
+	./build.sh
 build-binary-linux-amd64:
 	env GOOS=linux GOARCH=amd64 go build --ldflags=${LDFLAGS} -o ${BINARY}-linux-amd64
 build-binary-linux-arm64:
