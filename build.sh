@@ -20,4 +20,4 @@ else
     echo "Compiling to $TARGETPLATFORM"
 fi
 
-go build --ldflags=${LDFLAGS} -o ${BINARY}
+go build --ldflags="${LDFLAGS}" -o "${BINARY}"
